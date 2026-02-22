@@ -1,0 +1,263 @@
+================================================================================
+CRONPILOT CHEAT SHEET
+================================================================================
+
+QUICK START
+-----------
+1. Install: git clone https://github.com/DonkRonk17/CronPilot.git
+2. First run: python cronpilot.py --help
+3. Basic: python cronpilot.py explain "0 9 * * 1-5"
+
+================================================================================
+CRON EXPRESSION FORMAT
+--------------------------------------------------------------------------------
+
+Standard 5-field format:
+
+  .---------------- minute (0-59)
+  |  .------------- hour (0-23)
+  |  |  .---------- day of month (1-31)
+  |  |  |  .------- month (1-12 or jan-dec)
+  |  |  |  |  .---- day of week (0-6, 0=Sunday, or sun-sat)
+  |  |  |  |  |
+  *  *  *  *  *
+
+Field Syntax:
+  *       Any value (wildcard)
+  N       Specific value (e.g., 5)
+  N-M     Range (e.g., 9-17)
+  N,M,O   List (e.g., 1,3,5)
+  */N     Step from 0 (e.g., */15 = 0,15,30,45)
+  N-M/S   Stepped range (e.g., 1-30/5 = 1,6,11,16,21,26)
+
+Name Aliases:
+  Months:   jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec
+  Weekdays: sun, mon, tue, wed, thu, fri, sat
+
+Special Strings:
+  @yearly    = 0 0 1 1 *     (January 1st at midnight)
+  @annually  = 0 0 1 1 *     (same as @yearly)
+  @monthly   = 0 0 1 * *     (1st of every month at midnight)
+  @weekly    = 0 0 * * 0     (Every Sunday at midnight)
+  @daily     = 0 0 * * *     (Every day at midnight)
+  @midnight  = 0 0 * * *     (same as @daily)
+  @hourly    = 0 * * * *     (Every hour at minute 0)
+
+================================================================================
+CLI COMMANDS
+--------------------------------------------------------------------------------
+
+Explain a cron expression:
+  cronpilot explain "0 9 * * 1-5"
+  cronpilot explain "*/15 * * * *"
+  cronpilot explain "@daily"
+  cronpilot explain "0 9 * * 1-5" --json
+
+Show next N run times:
+  cronpilot next "0 9 * * 1-5"
+  cronpilot next "0 9 * * 1-5" -n 10
+  cronpilot next "0 9 * * 1-5" --after "2026-06-01T00:00:00"
+  cronpilot next "0 9 * * 1-5" -n 7 --json
+
+Show previous N run times:
+  cronpilot previous "0 0 * * *" -n 5
+  cronpilot previous "0 0 1 * *" --before "2026-01-01T00:00:00"
+
+Validate syntax:
+  cronpilot validate "0 9 * * 1-5"
+  cronpilot validate "0 25 * * *"
+  cronpilot validate "*/15 9-17 * * 1-5" --json
+
+Test datetime match:
+  cronpilot test "0 9 * * 1-5" "2026-02-23T09:00:00"
+  cronpilot test "0 9 * * 1-5" "2026-02-22T09:00:00"
+  cronpilot test "0 9 * * 1-5" "2026-02-23T09:00:00" --json
+
+Build expression:
+  cronpilot build --minute 0 --hour 9
+  cronpilot build --minute "*/15" --hour "9-17" --weekday weekdays
+  cronpilot build --minute 0 --hour 0 --day 1 --month "1,4,7,10"
+  cronpilot build --minute 0 --hour "8,20" --json
+
+List/lookup presets:
+  cronpilot presets
+  cronpilot presets daily_9am
+  cronpilot presets business_hours
+  cronpilot presets --json
+
+Compare two expressions:
+  cronpilot diff "0 9 * * *" "0 9 * * 1-5"
+  cronpilot diff "0 9 * * mon-fri" "0 9 * * 1-5"
+  cronpilot diff "0 9 * * *" "0 9 * * 1-5" --json
+
+================================================================================
+CLI FLAGS & OPTIONS
+--------------------------------------------------------------------------------
+
+Global Options:
+  -h, --help       Show help message
+  --version        Show version number
+
+Command-Specific:
+  next/previous:
+    -n, --count N  Number of runs to show (default: 5)
+    --after DT     Start after this datetime (ISO format)
+    --before DT    Start before this datetime (ISO format)
+    --json         Output as JSON
+
+  build:
+    --minute VAL   Minute field (e.g., 0, */5, 0,30)
+    --hour VAL     Hour field (e.g., 9, */2, 9-17)
+    --day VAL      Day of month (e.g., 1, 1,15)
+    --month VAL    Month (e.g., 1, 1,6)
+    --weekday VAL  Weekday (0-6, 'weekdays', 'weekends')
+    --json         Output as JSON
+
+  All commands:
+    --json         Output as JSON
+
+================================================================================
+PYTHON API
+--------------------------------------------------------------------------------
+
+Import:
+  from cronpilot import CronExpression, CronBuilder, validate
+  from cronpilot import get_preset, list_presets
+
+CronExpression:
+  cron = CronExpression("0 9 * * 1-5")
+  cron.explain()                    # Human-readable description
+  cron.matches(datetime_obj)        # True/False
+  cron.next_runs(5)                 # List of next 5 datetimes
+  cron.next_runs(3, after=dt)       # After specific time
+  cron.previous_runs(5)             # List of previous 5 datetimes
+  cron.to_dict()                    # Dict representation
+  cron.to_json()                    # JSON string
+  cron.minutes                      # Parsed minute values
+  cron.hours                        # Parsed hour values
+  cron.days                         # Parsed day values
+  cron.months                       # Parsed month values
+  cron.weekdays                     # Parsed weekday values
+  cron == other_cron                # Equality comparison
+
+CronBuilder:
+  builder = CronBuilder()
+  builder.at_minute(0, 30)          # Specific minutes
+  builder.every_n_minutes(15)       # Step minutes
+  builder.at_hours(9, 17)           # Specific hours
+  builder.every_n_hours(2)          # Step hours
+  builder.hour_range(9, 17)         # Hour range
+  builder.on_days(1, 15)            # Specific days
+  builder.in_months(1, 4, 7, 10)   # Specific months
+  builder.on_weekdays()             # Mon-Fri
+  builder.on_weekends()             # Sat-Sun
+  builder.on_specific_weekdays(1,3) # Specific weekdays
+  builder.build()                   # Returns cron string
+  builder.build_explained()         # Returns (cron, explanation)
+  builder.reset()                   # Clear all fields
+
+Validation:
+  result = validate("0 9 * * 1-5")
+  result["valid"]                   # True/False
+  result["explanation"]             # Human-readable or None
+  result["error"]                   # Error message or None
+  result["fields"]                  # Dict of raw fields or None
+
+Presets:
+  preset = get_preset("daily_9am")  # {"expression": "...", "description": "..."}
+  all_presets = list_presets()       # Dict of all 20 presets
+
+================================================================================
+COMMON PRESETS
+--------------------------------------------------------------------------------
+
+Name              Expression         Description
+every_minute      * * * * *          Every minute
+every_5_minutes   */5 * * * *        Every 5 minutes
+every_15_minutes  */15 * * * *       Every 15 minutes
+every_30_minutes  */30 * * * *       Every 30 minutes
+hourly            0 * * * *          Every hour at minute 0
+daily             0 0 * * *          Every day at midnight
+daily_9am         0 9 * * *          Every day at 9:00 AM
+daily_noon        0 12 * * *         Every day at noon
+daily_6pm         0 18 * * *         Every day at 6:00 PM
+weekly            0 0 * * 0          Every Sunday at midnight
+weekdays          0 9 * * 1-5        Weekdays at 9:00 AM
+weekends          0 10 * * 0,6       Weekends at 10:00 AM
+monthly           0 0 1 * *          First day of every month
+quarterly         0 0 1 1,4,7,10 *   First day of each quarter
+yearly            0 0 1 1 *          January 1st at midnight
+twice_daily       0 8,20 * * *       8:00 AM and 8:00 PM
+every_2_hours     0 */2 * * *        Every 2 hours at minute 0
+business_hours    0 9-17 * * 1-5     Every hour 9 AM - 5 PM weekdays
+end_of_month      0 0 28-31 * *      Last days of month at midnight
+
+================================================================================
+WEEKDAY NUMBERS
+--------------------------------------------------------------------------------
+
+0 = Sunday      3 = Wednesday    6 = Saturday
+1 = Monday      4 = Thursday
+2 = Tuesday     5 = Friday
+
+Aliases: sun, mon, tue, wed, thu, fri, sat
+
+================================================================================
+INTEGRATION WITH OTHER TOOLS
+--------------------------------------------------------------------------------
+
+With BatchRunner:
+  from cronpilot import CronExpression
+  import datetime
+  cron = CronExpression("0 2 * * *")
+  if cron.matches(datetime.datetime.now()):
+      batch_runner.execute("nightly_pipeline")
+
+With TaskTimer:
+  from cronpilot import CronExpression
+  schedule = CronExpression("*/25 9-17 * * 1-5")
+  next_break = schedule.next_runs(1)[0]
+
+With ServiceMonitor:
+  from cronpilot import CronExpression
+  health_check = CronExpression("*/5 * * * *")
+  if health_check.matches(now):
+      run_health_check()
+
+With SynapseLink:
+  from cronpilot import CronExpression
+  from synapselink import quick_send
+  cron = CronExpression("0 9 * * 1")
+  if cron.matches(now):
+      quick_send("TEAM", "Weekly Report", report_data)
+
+================================================================================
+TROUBLESHOOTING
+--------------------------------------------------------------------------------
+
+Error: "Expected 5 fields"
+  -> Your expression needs exactly 5 space-separated fields
+  -> Remember to QUOTE the expression: "0 9 * * *"
+
+Error: "value X out of range"
+  -> minute: 0-59, hour: 0-23, day: 1-31, month: 1-12, weekday: 0-6
+
+Error: "@reboot is not schedulable"
+  -> @reboot is a run-once directive, not a time schedule
+
+PowerShell quoting:
+  -> Use double quotes: cronpilot explain "0 9 * * 1-5"
+  -> Asterisks in single quotes may cause issues
+
+================================================================================
+RESOURCES
+--------------------------------------------------------------------------------
+
+Documentation:   CronPilot/README.md
+Examples:        CronPilot/EXAMPLES.md
+Integration:     CronPilot/INTEGRATION_PLAN.md
+Quick Start:     CronPilot/QUICK_START_GUIDES.md
+GitHub:          https://github.com/DonkRonk17/CronPilot
+Issues:          https://github.com/DonkRonk17/CronPilot/issues
+
+================================================================================

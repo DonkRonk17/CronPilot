@@ -1,0 +1,12 @@
+# CronPilot - Zero Dependencies
+# This tool uses only Python standard library modules:
+#   - argparse (CLI interface)
+#   - calendar (month/day name lookups)
+#   - datetime (time calculations)
+#   - json (serialization)
+#   - re (pattern matching)
+#   - sys (system interface)
+#   - pathlib (path handling)
+#
+# No external packages required!
+# Python 3.7+ recommended
