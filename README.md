@@ -1,3 +1,5 @@
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/16b3cefa-f18c-4889-a70a-77f38fe76c8a" />
+
 # ⏰ CronPilot
 
 **Cron Expression Parser, Builder & Scheduler — Zero Dependencies**
@@ -600,6 +602,9 @@ See [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md) for copy-paste patterns.
 - **Issues:** [https://github.com/DonkRonk17/CronPilot/issues](https://github.com/DonkRonk17/CronPilot/issues)
 
 ---
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/901daa5d-87d4-437a-806f-d32fab34fe78" />
+
 
 ## 🤝 Contributing
 
